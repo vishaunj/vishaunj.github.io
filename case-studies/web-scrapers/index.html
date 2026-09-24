@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web scrapers that replaced manual lead research | Vishaun Jones</title>
+<meta name="description" content="Python and Playwright scrapers I built to turn online directories into structured contact lists for outreach, including a 500+ lead association list.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/shared.css">
+<style>
+  .kicker { color:var(--ink-soft); margin:0 0 .75rem; font-size:1rem; }
+  .ledger { border-top:2px solid var(--ink); border-bottom:1px solid var(--rule); margin:2.5rem 0 3.5rem; font-size:1rem; }
+  .ledger .row { display:grid; grid-template-columns:1.4fr 1fr; gap:1rem; padding:.85rem 0; border-top:1px solid var(--rule); }
+  .ledger .row:first-child { border-top:0; }
+  .ledger .row > span:nth-child(2) { color:var(--teal); font-weight:600; font-variant-numeric:tabular-nums; }
+  .steps { counter-reset:step; list-style:none; padding:0; max-width:var(--measure); }
+  .steps li { counter-increment:step; position:relative; padding-left:2.75rem; margin-bottom:1.4rem; }
+  .steps li::before { content:counter(step); position:absolute; left:0; top:.2rem; width:1.9rem; height:1.9rem; border-radius:50%; border:1px solid var(--ink); color:var(--ink); font-size:.95rem; display:grid; place-items:center; }
+  .steps li strong { display:block; font-weight:600; margin-bottom:.2rem; }
+  figure { margin:2rem 0; max-width:100%; }
+  figure a { display:block; } figure img { width:100%; height:auto; border:1px solid var(--rule); display:block; }
+  figcaption { font-size:.95rem; color:var(--ink-soft); margin-top:.6rem; max-width:var(--measure); }
+  aside.note { border-left:3px solid var(--teal); padding:.25rem 0 .25rem 1.25rem; color:var(--ink-soft); font-style:italic; margin:0 0 1.15rem; max-width:var(--measure); }
+  .tools { display:flex; flex-wrap:wrap; gap:.5rem .75rem; padding:0; list-style:none; }
+  .tools li { border:1px solid var(--rule); padding:.2rem .7rem; font-size:.95rem; margin:0; }
+  pre { background:#1c2933; color:#e8edf0; font-size:.9rem; line-height:1.5; padding:1rem 1.2rem; border-radius:8px; overflow-x:auto; max-width:var(--measure); }
+  pre.flow { background:#fff; color:var(--ink); border:1px solid var(--rule); }
+  h3 { font-size:1.15rem; font-weight:600; margin:1.6rem 0 .5rem; }
+</style>
+</head>
+<body><div class="wrap">
+<header class="site"><a class="name" href="/">Vishaun Jones</a><nav><a href="/">Home</a><a href="/contact/">Contact</a></nav></header>
+<main>
+<div class="hero">
+<p class="kicker">Case study: lead research at a speaker booking agency, 2025 to 2026</p>
+<h1>Web scrapers that replaced manual lead research</h1>
+<p class="lede">The agency's outreach depended on contact lists that lived inside online directories, one profile at a time. The expected way to build a list was to click through every profile and type the details into a spreadsheet. I wrote Python scrapers that did the clicking, and the lists came back structured, deduplicated, and ready for the CRM.</p>
+</div>
+
+<div class="ledger" aria-label="Summary">
+<div class="row"><span>Association member directory</span><span>500+ qualified leads</span></div>
+<div class="row"><span>Organization directory</span><span>134+ organizations tracked</span></div>
+<div class="row"><span>Office directory</span><span>271 entries</span></div>
+<div class="row"><span>Stack</span><span>Python, Playwright, BeautifulSoup, CSV to ZoomInfo</span></div>
+</div>
+
+<section id="context">
+<h2>The situation</h2>
+<p>New business at the agency came from knowing who to contact. In a weekly meeting the CEO raised the need for a contact list from a professional association the agency belonged to. The assumption in the room was that someone would open each member profile and copy it into a spreadsheet, a job measured in days.</p>
+<p>The same pattern came up again and again: a conference attendee list, a directory of organizations in a target market, a directory of the offices the agency sold to. All of it was available online. None of it was available as a list.</p>
+</section>
+
+<section id="problem">
+<h2>What was going wrong</h2>
+<p>Manual list-building was slow enough that lists did not get built, or got built once and went stale. When they were built, the fields were inconsistent, which meant more cleanup before they could be loaded into ZoomInfo or the CRM. Outreach was limited by how much clicking anyone had time to do.</p>
+</section>
+
+<section id="approach">
+<h2>What I built</h2>
+<ol class="steps">
+<li><strong>Association member directory</strong> A Python scraper, built with AI assistance, that worked through the association's member directory using the agency's own membership login and produced a structured contact list of 500+ leads. It went to marketing for an email campaign and generated at least one inbound inquiry.</li>
+<li><strong>Conference attendee list</strong> A Playwright scraper for a login-gated, JavaScript-rendered attendee directory. I logged in manually, then the script paged through the results and wrote a CSV of name, title, and company formatted for ZoomInfo upload. This one fought back; see below.</li>
+<li><strong>Organization and office directories</strong> Playwright and BeautifulSoup scripts, plus an Excel tracker, that built a contact tracker for 134+ organizations in one target market and a 271-entry directory of the offices the agency sold to, both structured for outreach.</li>
+</ol>
+
+<h3>The one that fought back</h3>
+<p>The conference attendee directory looked like a normal page and was not. My first version used requests and BeautifulSoup with exported cookies, and it returned nothing, because the attendee cards were rendered by JavaScript after the page loaded. I switched to Playwright to drive a real browser, worked through an install error and a 30-second timeout, and got the first page.</p>
+<p>Only the first page. The pagination controls were not links; they were Knockout.js click bindings, so following hrefs did nothing. The fix was to read the page's view model for the current page number and page count, click the next control directly, and wait for the cards to re-render before scraping again. Once that loop was in place the rest of the directory came through cleanly.</p>
+<pre class="flow">login (manual, in the Playwright browser)
+  -> read viewmodel.PageNumber and viewmodel.PageCount
+  -> for each page:
+       scrape attendee cards -> name, title, company
+       click the "next" control (Knockout binding, not a link)
+       wait for cards to re-render
+  -> write fsae_attendees.csv in ZoomInfo's upload layout</pre>
+<figcaption style="margin-top:-.8rem">The shape of the pagination loop. Full script on <a href="https://github.com/vishaunj">GitHub</a>; it contains no company or attendee data.</figcaption>
+</section>
+
+<section id="results">
+<h2>Results</h2>
+<ul>
+<li>The association list was delivered in a fraction of the time the team had planned for, with 500+ qualified leads and at least one inbound inquiry from the campaign it fed.</li>
+<li>The directory work produced a tracker of 134+ organizations and a 271-entry office directory that outreach could work from directly.</li>
+<li>Every list came out in the same shape, formatted for ZoomInfo enrichment and CRM upload, so the cleanup step mostly disappeared.</li>
+<li>The team stopped treating list-building as a multi-day project and started asking for lists.</li>
+</ul>
+</section>
+
+<section id="lessons">
+<h2>What I would do differently</h2>
+<p>Start with a real browser for any login-gated or modern directory. Assuming static HTML cost me a full iteration on the attendee list, and it is the wrong default now that most directories render in the browser.</p>
+<p>Each of these was a script written for one site. That was the right call for the job in front of me, but it means the next directory needs its own script, and a change to any site breaks its scraper. Making this repeatable across sources would take real engineering: a shared structure for login, pagination, and output, with per-site adapters. I know where that line is now, and I would plan for it earlier.</p>
+<p>Only scrape what you have the right to access. Every directory here was one the agency was entitled to view as a member, attendee, or member of the public, and the scripts did nothing a person with the same login could not do by hand, just faster.</p>
+</section>
+
+<section id="tools">
+<h2>Tools used</h2>
+<ul class="tools"><li>Python</li><li>Playwright (Chromium)</li><li>BeautifulSoup</li><li>CSV and Excel</li><li>ZoomInfo</li><li>AI-assisted development</li></ul>
+</section>
+</main>
+<footer class="site"><p>Vishaun Jones, Business Operations and Strategy</p><p><a href="mailto:vishaunjones@gmail.com">vishaunjones@gmail.com</a> &middot; <a href="https://linkedin.com/in/vishaunjones">LinkedIn</a> &middot; <a href="https://github.com/vishaunj">GitHub</a></p></footer>
+</div></body></html>
