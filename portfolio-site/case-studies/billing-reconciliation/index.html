@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A billing audit that catches errors before clients are charged | Vishaun Jones</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="A billing audit that catches errors before clients are charged | Vishaun Jones">
+<meta property="og:description" content="How I built a monthly billing reconciliation for a remote agency with 150+ recurring clients, cutting invoice errors from seven or eight per cycle to near zero and shortening the audit by roughly 40%.">
+<meta property="og:url" content="https://vishaunj.github.io/case-studies/billing-reconciliation/">
+<meta property="og:image" content="https://vishaunj.github.io/og/billing.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="How I built a monthly billing reconciliation for a remote agency with 150+ recurring clients, cutting invoice errors from seven or eight per cycle to near zero and shortening the audit by roughly 40%.">
+<link rel="stylesheet" href="/shared.css">
+<script src="/site.js" defer></script>
+</head>
+<body><div class="progress" aria-hidden="true"></div>
+<div class="wrap">
+<header class="site"><a class="name" href="/">Vishaun Jones</a><nav><a href="/">Home</a><a href="/contact/">Contact</a></nav></header>
+<main>
+    <div class="hero">
+      <p class="kicker">Case study: business operations at a remote marketing agency, 2023 to 2025</p>
+      <h1>A billing audit that catches errors before clients are charged</h1>
+      <p class="lede">A remote agency billed 150+ clients on recurring plans through a payments platform. Seven or eight of those charges were wrong every month, and nobody knew until a client noticed. I built a reconciliation that compares what the team expects to bill against what the platform is scheduled to charge, two weeks before the charges run.</p>
+    </div>
+
+    <div class="ledger" aria-label="Before and after summary">
+      <div class="row"><span>Each monthly cycle</span><span>Before</span><span>After</span></div>
+      <div class="row"><span>Incorrect or missing charges</span><span>7 to 8</span><span>Near zero</span></div>
+      <div class="row"><span>Time to close the audit</span><span>Spilled across several days</span><span>Roughly 40% less</span></div>
+      <div class="row"><span>How plan changes reached billing</span><span>Chat threads and loose emails</span><span>One template, one activity log</span></div>
+      <div class="row"><span>How mismatches were found</span><span>By clients, after the charge</span><span>Highlighted in the sheet, before it</span></div>
+    </div>
+
+    <section id="context">
+      <h2>The situation</h2>
+      <p>The agency served private practices and small businesses on monthly plans. Clients moved between plans often: a project ended and the client shifted to a lighter maintenance plan, a client upgraded, added a service, paused, or cancelled. Each client had a specialist who managed the relationship, and a VP oversaw the specialists and handled clients whose contracts were transitioning.</p>
+      <p>Charges ran automatically on the 25th of each month through the agency's payments platform, based on whatever recurring invoice was scheduled for each client. The team's shared client sheet held the plan each client was supposed to be on. The two were maintained separately, and nothing connected them.</p>
+      <p>I owned the billing cycle, including a billing audit on the 10th of each month that existed to confirm every client was scheduled to be charged the right amount, or charged at all.</p>
+
+      <div class="month" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span class="audit"></span>
+        <span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span><span class="fix"></span>
+        <span class="charge"></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="month-key">
+        <span><i style="background:var(--teal)"></i>10th: audit</span>
+        <span><i style="background:var(--sage)"></i>Window to resolve exceptions</span>
+        <span><i style="background:var(--blush)"></i>25th: charges run</span>
+      </div>
+    </section>
+
+    <section id="problem">
+      <h2>What was going wrong</h2>
+      <p>The audit was catching some problems, but it was slow and it was missing things. Seven or eight charges per month still went out wrong. The errors fell into a few repeatable patterns:</p>
+      <ul>
+        <li>A client's contract had ended and they had not yet chosen their next plan, so no invoice was scheduled and they were not billed at all.</li>
+        <li>A client changed plans, the change did not reach billing, and the old amount was charged.</li>
+        <li>A client cancelled but their recurring invoice was still active.</li>
+        <li>An add-on service was agreed to and delivered but never added to the invoice.</li>
+      </ul>
+      <p>When I traced these back, the invoice was never the real failure point. Plan changes reached me through two channels, the VP for transitioning clients and the team chat for everything else. Neither was designed for it. A change could be mentioned once in a chat thread and disappear. There was no place where "this client's billing should be different this month" was written down in a form the audit could check against.</p>
+      <p>I raised this with leadership as a communication breakdown rather than a billing problem, and proposed a defined way for changes to reach billing.</p>
+    </section>
+
+    <section id="approach">
+      <h2>What I built</h2>
+      <ol class="steps">
+        <li>
+          <strong>A change request template and an activity log</strong>
+          I created an email template for specialists to fill out whenever a client's service changed. It was built for the specialists first: a fixed set of fields, no new tool to learn, sent from the inbox they already lived in. It was also built for the script that read it. The fields followed a consistent format so a Google Apps Script could parse each submission and write it as an entry in a billing activity log, recording the client, the change, and when it came in.
+          <p style="margin-top:.6rem">The template became the required route for every change that touched billing: add-ons, plan changes, cancellations, and, once leadership adopted it, the final confirmation step for clients leaving a contract and moving to a maintenance plan. A change that was not submitted through the template was not a change the audit would act on.</p>
+        </li>
+        <li>
+          <strong>A reconciliation sheet</strong>
+          On the 10th, I exported the platform's list of scheduled upcoming charges and loaded it into a temporary tab in a billing sheet I built. VLOOKUP pulled each client's expected plan and amount from the team's shared client sheet alongside the platform's scheduled charge for the same client. For the first time, the two sources sat in the same row.
+        </li>
+        <li>
+          <strong>Conditional formatting as the exception list</strong>
+          Rules highlighted any row where the plan in the client sheet did not match the service being charged, the amounts differed, a client in the client sheet had no scheduled charge, a scheduled charge belonged to a client marked as ended, or the lookup returned #N/A because no invoice existed on the platform at all. The audit stopped being a line-by-line read and became a short list of highlighted rows to resolve.
+        </li>
+        <li>
+          <strong>A resolution loop with a deadline</strong>
+          Each flagged row went to the client's specialist for clarification, or to the VP for clients moving from a project plan to maintenance. Because the audit sat on the 10th and charges ran on the 25th, there was a two-week window to fix the invoice in the platform before it hit the client's card.
+        </li>
+        <li>
+          <strong>An SOP for handoff</strong>
+          I documented the full cycle, from export to resolution, so the process did not depend on me. When new management came in near the end of my time there, the SOP was what they used to understand and review it.
+        </li>
+      </ol>
+
+      <figure>
+        <a href="images/reconciliation-sheet.png" target="_blank" rel="noopener"><img src="images/reconciliation-sheet.png" alt="Recreated billing audit sheet: each client's current package and specialist notes beside the invoice title, status, and amount pulled from the payments platform, with mismatched cells highlighted and a Billing Correct checkbox per row"></a>
+        <figcaption>A recreation of the reconciliation tab using sample data. Left columns come from the team's client sheet via VLOOKUP, right columns from the payments platform export. Highlighted cells are the month's exceptions, and #N/A means the platform has no invoice scheduled for that client. Each row is checked off once billing is confirmed correct.</figcaption>
+      </figure>
+
+      <figure>
+        <a href="images/activity-log.png" target="_blank" rel="noopener"><img src="images/activity-log.png" alt="Recreated client activity log with color-coded activity types, change request dates, and a Billing Updated checkbox, most rows logged automatically from change request emails"></a>
+        <figcaption>The activity log. Entries were created automatically from change request emails so every plan change had a dated record the audit could check, with a checkbox to confirm billing was updated.</figcaption>
+      </figure>
+
+      <aside class="note">All screenshots on this page are recreations with sample client names and amounts. No client data from the agency is shown.</aside>
+    </section>
+
+    <section id="results">
+      <h2>Results</h2>
+      <ul>
+        <li>Incorrect and missing charges fell from seven or eight per month to near zero.</li>
+        <li>The audit, which used to spill past the 10th whenever issues came up, closed in roughly 40% less time because exceptions were already highlighted and fewer of them existed.</li>
+        <li>Clients who had finished a contract were caught before the 25th and moved to a maintenance plan, instead of silently dropping off billing.</li>
+        <li>Leadership had a written trail of plan changes for the first time, which later fed the monthly KPI reporting I built for the CEO and COO.</li>
+      </ul>
+    </section>
+
+    <section id="lessons">
+      <h2>What I would do differently</h2>
+      <p>The lookups keyed on client name, because the team had not adopted client IDs and I could not get them to. Consultants sometimes entered a name differently from how it appeared in the payments platform, and every one of those became a false exception I had to check by hand. A shared client ID would have removed that entire class of problem. I pushed for it and did not win that one, which taught me that the technical fix is often the easy part. Getting a team to change how it records information is the harder and more valuable work.</p>
+      <p>I also cannot say whether the process outlived my tenure. It was handed off with an SOP and was simple enough to run without me, but adoption after a handoff is never guaranteed. If I built it again I would spend more time making the new owner's first cycle go smoothly, not just documenting it.</p>
+    </section>
+
+    <section id="tools">
+      <h2>Tools used</h2>
+      <ul class="tools">
+        <li>Google Sheets (VLOOKUP, conditional formatting)</li>
+        <li>Google Apps Script</li>
+        <li>Payments platform export</li>
+        <li>SOP documentation</li>
+      </ul>
+    </section>
+
+    <section id="apply">
+      <h2>Billing clients on recurring plans?</h2>
+      <p>If your team keeps client information in one place and charges clients from another, this kind of mismatch is probably happening to you, and you will hear about it from a client before you see it yourself. I help service businesses and small agencies put a reconciliation step in front of their billing, along with KPI reporting and back-office automation. <a href="mailto:vishaunjones@gmail.com">Email me</a> or connect on <a href="https://linkedin.com/in/vishaunjones">LinkedIn</a>.</p>
+    </section>
+  </main>
+</div>
+<footer class="site"><span class="farch" aria-hidden="true"></span><span class="fdot" aria-hidden="true"></span><div class="wrap"><p class="big">Let&rsquo;s work together.</p><div class="links"><a href="mailto:vishaunjones@gmail.com">vishaunjones@gmail.com</a><a href="https://linkedin.com/in/vishaunjones">LinkedIn</a><a href="https://github.com/vishaunj">GitHub</a></div><p class="fine">Vishaun Jones, Business Operations and Strategy</p></div></footer>
+
+</body></html>
